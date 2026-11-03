@@ -7,13 +7,14 @@ Repositório: https://github.com/LucasMABF/SB
 
 | Membro | Matrícula | Responsabilidade |
 |---|---|---|
-| Lucas | | Coordenação, esqueleto e parser |
-| _(nome — Pessoa A)_ | | Pool de constantes |
-| _(nome — Pessoa B)_ | | Bytecode |
-| _(nome — Pessoa C)_ | | Atributos |
-| _(nome — Pessoa D)_ | | Seções gerais, linha de comando e entrega |
+| _Lucas Mendes_ | 241020750 | Coordenação, esqueleto, parser, seções gerais, linha de comando e entrega |
+| _Antonio Coelho_ | 241038100 | Pool de constantes |
+| _Gabriel Pinto_ | 241002331 | Bytecode |
+| _Leonardo Mileo_ | 241032690 | Atributos |
 
-## Lucas — coordenação, esqueleto e parser
+## Lucas Mendes — coordenação, parser, linha de comando e entrega
+
+Coordenação, esqueleto e parser:
 - Arquitetura do projeto: separação em módulos (`reader`, `classfile`,
   `constant_pool`, `opcodes`/`bytecode`, `attributes`, `printer`).
 - Leitor big-endian com checagem de limites (`reader.c`) e parser completo do
@@ -24,7 +25,14 @@ Repositório: https://github.com/LucasMABF/SB
 - Decodificadores de Code e SourceFile e o despacho de atributos por nome.
 - Integração, revisão e testes finais.
 
-## Pessoa A — pool de constantes (`src/constant_pool.c`)
+Seções gerais, linha de comando e entrega (`src/printer.c`, `src/main.c`):
+- Nome da versão do Java a partir do major_version.
+- Opções de linha de comando: seção específica (`-s`), saída em arquivo (`-o`)
+  e menu interativo (`-i`).
+- Classes de teste extras (`tests/java`) e comparação da saída com o `javap`.
+- Slides com prints das seções e README.
+
+## Antonio — pool de constantes (`src/constant_pool.c`)
 - Exibição detalhada de todas as tags do pool, no estilo do jclasslib, com o
   índice e o valor resolvido de cada referência.
 - Long/Double com high/low bytes e o slot extra que eles ocupam.
@@ -33,23 +41,16 @@ Repositório: https://github.com/LucasMABF/SB
   e escape de caracteres de controle.
 - Resolução do bootstrap method nas entradas InvokeDynamic.
 
-## Pessoa B — bytecode (`src/opcodes.c`, `src/bytecode.c`)
+## Gabriel — bytecode (`src/opcodes.c`, `src/bytecode.c`)
 - Tabela com os 202 opcodes da JVMS (e os 3 reservados), cada um com o
   mnemônico e o formato dos operandos.
 - Operandos que apontam para o pool exibem a constante referenciada.
 - `tableswitch` e `lookupswitch` (padding relativo ao início do código) e `wide`.
 
-## Pessoa C — atributos (`src/attr_decoders.c`)
+## Leonardo — atributos (`src/attr_decoders.c`)
 - ConstantValue, Exceptions, LineNumberTable, LocalVariableTable,
   LocalVariableTypeTable, InnerClasses, Signature, EnclosingMethod,
   Deprecated, Synthetic.
 - StackMapTable (todos os tipos de frame) e BootstrapMethods.
 - Atributos de versões novas do Java: MethodParameters, NestHost, NestMembers,
   PermittedSubclasses, Record, anotações e AnnotationDefault.
-
-## Pessoa D — seções gerais, linha de comando e entrega (`src/printer.c`, `src/main.c`)
-- Nome da versão do Java a partir do major_version.
-- Opções de linha de comando: seção específica (`-s`), saída em arquivo (`-o`)
-  e menu interativo (`-i`).
-- Classes de teste extras (`tests/java`) e comparação da saída com o `javap`.
-- Slides com prints das seções e README.
