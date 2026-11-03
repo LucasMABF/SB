@@ -56,7 +56,7 @@ static const char *newarray_type_name(u1 atype)
 /*                                                                        */
 /* Cada função imprime os operandos (a partir do mnemônico, que já foi    */
 /* impresso) e retorna o TAMANHO TOTAL da instrução em bytes, ou 0 se a   */
-/* instrução estiver malformada / não implementada (o disassembler então  */
+/* instrução estiver malformada ou truncada (o disassembler então         */
 /* interrompe a listagem desse método, pois não sabe onde está a próxima).*/
 /* ---------------------------------------------------------------------- */
 

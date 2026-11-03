@@ -177,9 +177,17 @@ ClassFile *classfile_load(const char *path, char *err, size_t err_len)
         return NULL;
     }
 
+    /* O ClassFile copia tudo o que precisa (Utf8, atributos), então o buffer
+     * do arquivo pode ser liberado logo após o parse. */
+    ClassFile *cf = classfile_parse(data, size, err, err_len);
+    free(data);
+    return cf;
+}
+
+ClassFile *classfile_parse(const u1 *data, size_t size, char *err, size_t err_len)
+{
     ClassFile *cf = calloc(1, sizeof(ClassFile));
     if (!cf) {
-        free(data);
         set_err(err, err_len, "memória insuficiente");
         return NULL;
     }
@@ -245,11 +253,9 @@ ClassFile *classfile_load(const char *path, char *err, size_t err_len)
         fprintf(stderr, "Aviso: %lu byte(s) extra(s) no fim do arquivo foram ignorados\n",
                 (unsigned long)br_remaining(&r));
 
-    free(data);
     return cf;
 
 fail:
-    free(data);
     classfile_free(cf);
     return NULL;
 }

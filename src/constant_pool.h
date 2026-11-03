@@ -29,30 +29,12 @@ int64_t cp_long_value(const cp_info *e);
 double  cp_double_value(const cp_info *e);
 
 /**
- * Formata float/double como o Java (Float.toString / Double.toString):
- * "1.0", "3.1415", "1.0E10", "NaN", "Infinity", "-Infinity".
- * Usa o menor número de dígitos que reproduz exatamente o valor.
- */
-void format_float(float f, char *buf, size_t buf_len);
-void format_double(double d, char *buf, size_t buf_len);
-
-/**
- * Converte uma string Modified UTF-8 (JVMS §4.4.7) para UTF-8 padrão,
- * escapando caracteres de controle (\n, \t, \0, \uXXXX...) para não quebrar
- * o layout da saída. Pares de surrogates viram um único caractere UTF-8.
- * O resultado é truncado em buf_len-1 bytes e sempre termina em '\0'.
- * Para nunca truncar, use buf_len >= 6 * len + 1.
- * @return número de caracteres em UTF-16 (o "Length of string" do jclasslib).
- */
-size_t mutf8_format(const u1 *bytes, size_t len, char *buf, size_t buf_len);
-
-/**
  * Escreve em `buf` a representação "resolvida" da constante `idx`, ou seja,
  * o valor que o jclasslib mostra entre < >. Exemplos:
  *   Class        -> java/lang/Object
  *   Methodref    -> java/io/PrintStream.println : (I)V
  *   NameAndType  -> <init> : ()V
- *   String       -> "Ola mundo"
+ *   String       -> "Ola mundo\n"   (caracteres de controle viram escapes)
  *   Integer      -> 42
  */
 void cp_describe(const ClassFile *cf, u2 idx, char *buf, size_t buf_len);

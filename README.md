@@ -24,107 +24,83 @@ gcc -std=c99 -Wall -Wextra -pedantic -O2 -g src/*.c -o leitor-exibidor
 ```
 
 No Windows (MinGW), o mesmo comando gera `leitor-exibidor.exe`; com o Make do
-MinGW use `mingw32-make`. Testado com GCC 6.3 (MinGW) e GCC 16.1 (MinGW-w64).
+MinGW, use `mingw32-make`.
 
 ## Execução
 
 ```sh
-./leitor-exibidor examples/Belote.class            # todas as seções no terminal
-./leitor-exibidor examples/Belote.class > out.txt  # saída em arquivo (redirecionamento)
-./leitor-exibidor -o out.txt examples/Belote.class # saída em arquivo (opção -o)
-./leitor-exibidor -s pool -s metodos examples/Belote.class  # só algumas seções
-./leitor-exibidor -i examples/Belote.class         # menu interativo de seções
+./leitor-exibidor examples/Belote.class            # saída no terminal
+./leitor-exibidor examples/Belote.class > out.txt  # saída em arquivo
 ```
-
-| Opção | Efeito |
-|---|---|
-| `-s <seção>` | Exibe só a seção indicada (pode repetir): `geral`, `pool`, `interfaces`, `fields`, `metodos`, `atributos` |
-| `-o <arquivo>` | Grava a saída no arquivo em vez do terminal |
-| `-i` | Modo interativo: menu para escolher a seção a exibir |
-| `-h` | Ajuda |
 
 Código de saída: 0 em caso de sucesso, 1 em caso de erro (arquivo inexistente,
-magic number inválido, arquivo truncado/malformado...). Se o nome do arquivo não
-bate com a classe declarada (`this_class`), um aviso é mostrado em stderr.
-
-Outros alvos do Make:
-
-```sh
-make test   # roda em examples/ e tests/classes/, salva em out/ e mostra um resumo
-make asan   # recompila com AddressSanitizer/UBSan (Linux; para depuração)
-make clean
-```
+magic number inválido, arquivo truncado ou malformado).
 
 ## O que é exibido
 
 - **Informações gerais**: magic, versões (com o nome da versão do Java, ex.: `52 [1.8]`),
-  access flags decodificadas, this/super class, contadores.
-- **Pool de constantes**: todas as tags da JVMS (Utf8, Integer, Float, Long, Double,
-  Class, String, Fieldref, Methodref, InterfaceMethodref, NameAndType, MethodHandle,
-  MethodType, Dynamic, InvokeDynamic, Module, Package), cada referência com o índice
-  e o valor resolvido (`cp #12 <java/lang/Object>`). Long/Double mostram high/low
-  bytes e ocupam dois slots. Float/Double no formato do Java, incluindo `NaN`,
-  `Infinity` e `-Infinity`. Strings Modified UTF-8 decodificadas (caractere nulo
-  `C0 80`, pares de surrogates), com escape de `\n`, `\t` etc.
+  access flags decodificadas, this/super class e contadores.
+- **Pool de constantes**: todas as entradas com índice e tipo; cada referência
+  mostra o índice e o valor resolvido (`cp #12 <java/lang/Object>`). Integer,
+  Float, Long e Double mostram os bytes e o valor; Long/Double ocupam dois slots.
+  Strings com `\n`, `\t`, `\r` e o caractere nulo são exibidas com escape.
 - **Interfaces, fields e métodos**: nome, descritor e access flags.
-- **Bytecode**: todos os 202 opcodes da JVMS (mais os 3 reservados) com mnemônico e operandos. Operandos que
-  apontam para o pool exibem a constante (`invokevirtual #4 <java/io/PrintStream.println : (I)V>`);
-  desvios mostram o destino absoluto e o offset (`ifeq 12 (+8)`); `tableswitch` e
-  `lookupswitch` (com o padding relativo ao início do código), `wide`, `iinc`,
-  `newarray` (tipo), `multianewarray`, `invokeinterface`, `invokedynamic`.
-- **Atributos**: Code (com tabela de exceções), ConstantValue, Exceptions,
-  LineNumberTable, LocalVariableTable, LocalVariableTypeTable, SourceFile,
-  InnerClasses, EnclosingMethod, Signature, Deprecated, Synthetic, StackMapTable
-  (todos os tipos de frame), BootstrapMethods, MethodParameters, NestHost,
-  NestMembers, PermittedSubclasses, Record, SourceDebugExtension,
-  Runtime(In)VisibleAnnotations, Runtime(In)VisibleParameterAnnotations e
-  AnnotationDefault.
+- **Bytecode**: os 202 opcodes da JVMS, com mnemônico e operandos. Operandos que
+  apontam para o pool exibem a constante
+  (`invokevirtual #4 <java/io/PrintStream.println : (I)V>`); desvios mostram o
+  destino absoluto e o deslocamento (`ifeq 12 (+8)`). Inclui `tableswitch`,
+  `lookupswitch` e `wide`.
+- **Atributos decodificados**: Code (com a tabela de exceções), SourceFile,
+  ConstantValue, Signature, Exceptions, LineNumberTable e LocalVariableTable.
 
 ### Não implementado
 
-- Atributos `RuntimeVisibleTypeAnnotations`/`RuntimeInvisibleTypeAnnotations` e os
-  de módulo (`Module`, `ModulePackages`, `ModuleMainClass`): aparecem como dump
-  hexadecimal (não ocorrem nas classes de teste).
+- Os demais atributos (ex.: StackMapTable, InnerClasses, BootstrapMethods,
+  anotações) não são decodificados: aparecem como dump hexadecimal, com nome e
+  tamanho. Dos exemplos da disciplina, só a StackMapTable aparece (em 2 métodos).
+- Caracteres fora do BMP (ex.: emoji) em strings não são convertidos do
+  formato Modified UTF-8.
 - Interface gráfica em árvore como a do jclasslib: a exibição é em texto.
 
-## Testes
+## Testes e analisadores
 
-- `examples/`: classes fornecidas na disciplina (incluindo `cafebabe.class`, que
-  não é um .class e deve gerar erro).
-- `tests/java/` + `tests/classes/`: classes extras para cobrir o que os exemplos
-  não cobrem (`wide`, NaN/Infinity, strings com escapes e emoji, lambdas,
-  anotações, records, StackMapTable...). Para recompilar (JDK 17+):
+```sh
+make test                # roda em examples/ e tests/classes/ e salva a saída em out/
+make asan                # recompila com AddressSanitizer/UBSan
+make cppcheck            # análise estática (falha se houver qualquer aviso)
+make fuzz                # fuzzing com libFuzzer por 60 s (precisa do clang)
+make fuzz FUZZ_TIME=600  # fuzzing por 10 min
+make clean
+```
 
-  ```sh
-  javac -encoding UTF-8 -g --release 8 -d tests/classes tests/java/Recursos.java tests/java/Largo.java
-  javac -encoding UTF-8 -g -parameters --release 17 -d tests/classes tests/java/Moderno.java
-  ```
-
-A saída foi conferida com `javap -v -p` (JDK 21) para todas essas classes: mesmas
-tags e valores no pool, mesmas instruções (pc, mnemônico, índice do pool) e mesmos
-destinos de switch. O parser também foi testado com milhares de arquivos
-truncados/corrompidos sem travar.
+- `examples/`: classes fornecidas na disciplina. O `cafebabe.class` não é um
+  .class (é um executável do Windows) e deve ser rejeitado com erro.
+- `tests/classes/` (fontes em `tests/java/`): classes extras com `wide`,
+  exceções, lambdas e classes internas.
+- O harness do libFuzzer (`fuzz/fuzz_classfile.c`) passa cada entrada gerada
+  pelo parser e, se ela for aceita, por toda a exibição. As sementes são os
+  `.class` de `examples/` e `tests/classes/`. Entradas que causam crash são
+  salvas em `build/fuzz/`.
 
 ## Entrega
 
 - `docs/slides.pdf`: slides com exemplos das seções exibidas pelo leitor-exibidor.
 - `docs/ATIVIDADES.md`: resumo das atividades de cada membro.
 - `docs/ROTEIRO_VIDEO.md`: roteiro do vídeo de 5 minutos.
-- `docs/prints/`: prints da saída do leitor-exibidor (uma seção por imagem).
 
 ## Estrutura
 
 | Arquivo | Responsabilidade |
 |---|---|
-| `src/main.c` | Ponto de entrada e opções de linha de comando |
+| `src/main.c` | Ponto de entrada |
 | `src/reader.[ch]` | Leitura big-endian com checagem de limites |
 | `src/classfile.[ch]` | Estruturas do .class e parser |
-| `src/constant_pool.[ch]` | Resolução e exibição do pool de constantes, Modified UTF-8, float/double |
+| `src/constant_pool.[ch]` | Resolução e exibição do pool de constantes |
 | `src/access_flags.[ch]` | Decodificação das access flags |
 | `src/opcodes.[ch]` | Tabela de opcodes (mnemônico + tipo de operando) |
 | `src/bytecode.[ch]` | Disassembler do atributo Code |
-| `src/attributes.[ch]` | Despacho de atributos, Code e SourceFile |
-| `src/attr_decoders.c` | Demais atributos (LineNumberTable, StackMapTable, anotações, ...) |
+| `src/attributes.[ch]` | Decodificação dos atributos |
 | `src/printer.[ch]` | Exibição das seções |
+| `src/util.[ch]` | Indentação, títulos e dump hexadecimal |
 
 Referência: JVMS SE 8, capítulos 4 e 6 (https://docs.oracle.com/javase/specs/jvms/se8/html/).
