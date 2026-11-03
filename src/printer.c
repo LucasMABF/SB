@@ -41,7 +41,7 @@ static void print_flags_line(int depth, u2 flags, FlagContext ctx)
     printf("%-*s 0x%04X [%s]\n", LABEL_WIDTH, "Access flags:", flags, buf);
 }
 
-void print_general_info(const ClassFile *cf)
+static void print_general_info(const ClassFile *cf)
 {
     char version[16];
     print_section("GENERAL INFORMATION");
@@ -62,7 +62,7 @@ void print_general_info(const ClassFile *cf)
     print_u_line(0, "Attributes count:", cf->attributes_count);
 }
 
-void print_interfaces(const ClassFile *cf)
+static void print_interfaces(const ClassFile *cf)
 {
     print_section("INTERFACES");
     printf("Interfaces count: %u\n", cf->interfaces_count);
@@ -82,7 +82,7 @@ static void print_member(const ClassFile *cf, const member_info *m, u2 i, FlagCo
     print_attributes(cf, m->attributes_count, m->attributes, 2);
 }
 
-void print_fields(const ClassFile *cf)
+static void print_fields(const ClassFile *cf)
 {
     print_section("FIELDS");
     printf("Fields count: %u\n", cf->fields_count);
@@ -90,7 +90,7 @@ void print_fields(const ClassFile *cf)
         print_member(cf, &cf->fields[i], i, FLAGS_FIELD);
 }
 
-void print_methods(const ClassFile *cf)
+static void print_methods(const ClassFile *cf)
 {
     print_section("METHODS");
     printf("Methods count: %u\n", cf->methods_count);
@@ -98,7 +98,7 @@ void print_methods(const ClassFile *cf)
         print_member(cf, &cf->methods[i], i, FLAGS_METHOD);
 }
 
-void print_class_attributes(const ClassFile *cf)
+static void print_class_attributes(const ClassFile *cf)
 {
     print_section("CLASS ATTRIBUTES");
     print_attributes(cf, cf->attributes_count, cf->attributes, 0);

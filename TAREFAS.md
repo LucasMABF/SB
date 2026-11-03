@@ -36,13 +36,14 @@ Para comparar a saída: jclasslib (https://github.com/ingokegel/jclasslib) ou
 - [x] Opções `-s` (seção), `-o` (arquivo de saída) e `-i` (menu interativo)
 - [x] Slides com prints das seções (General, Constant Pool, Fields,
       Methods/Bytecode, Attributes) e do erro do `cafebabe.class`
-- [x] Resumo das atividades de cada membro (`docs/ATIVIDADES.md`, falta preencher os nomes)
 
 ## Coordenação (Lucas Mendes)
 - [x] Esqueleto, parser, Makefile, script de testes
 - [x] Integrar as contribuições; `make test` sem pendências; saída conferida com `javap`
-- [ ] `make asan` em Linux (no Windows/MinGW o AddressSanitizer não está disponível;
-      no lugar disso foi feito um teste com arquivos truncados/corrompidos)
+- [x] `make asan` em Linux: limpo em todas as classes de teste
+- [ ] Analisadores da turma: `make cppcheck` e `make fuzz` sem achados
+- [ ] Todos estudarem o código para a apresentação ao professor
+- [ ] Resumo das atividades de cada membro (o que cada um fez de fato)
 - [ ] Roteiro e gravação do vídeo (5 min): o que foi feito, o que não foi, como compilar/rodar
 - [ ] Empacotar a entrega (fontes + Makefile + README, vídeo, slides, resumo)
 

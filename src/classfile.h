@@ -95,6 +95,12 @@ typedef struct {
  */
 ClassFile *classfile_load(const char *path, char *err, size_t err_len);
 
+/**
+ * Faz o parse de um .class que já está em memória (usado por classfile_load
+ * e pelo harness do libFuzzer). O buffer não é modificado nem guardado.
+ */
+ClassFile *classfile_parse(const u1 *data, size_t size, char *err, size_t err_len);
+
 void classfile_free(ClassFile *cf);
 
 #endif
