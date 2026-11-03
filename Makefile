@@ -2,6 +2,11 @@ CC      := gcc
 CFLAGS  := -std=c99 -Wall -Wextra -pedantic -O2 -g
 TARGET  := leitor-exibidor
 
+# No Windows (MinGW) o gcc gera leitor-exibidor.exe
+ifeq ($(OS),Windows_NT)
+TARGET  := $(TARGET).exe
+endif
+
 SRCS := $(wildcard src/*.c)
 OBJS := $(SRCS:src/%.c=build/%.o)
 DEPS := $(OBJS:.o=.d)
@@ -21,7 +26,7 @@ build:
 
 # Roda o exibidor em todos os exemplos e resume o resultado.
 test: all
-	./scripts/run_examples.sh
+	sh scripts/run_examples.sh
 
 # Compila com AddressSanitizer/UBSan para caçar acessos inválidos de memória.
 asan: clean

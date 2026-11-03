@@ -11,16 +11,20 @@
 #include <stdio.h>
 
 /*
- * TODO(Pessoa D): mapear major_version para o nome da versão do Java,
- * como o jclasslib faz ("Major version: 52 [1.8]").
- *   45 -> 1.1, 46 -> 1.2, 47 -> 1.3, 48 -> 1.4, 49 -> 5, 50 -> 6,
- *   51 -> 7, 52 -> 8, ... (a partir do 49: versão = major - 44)
- * Fonte: JVMS §4.1, tabela 4.1-A.
+ * Nome da versão do Java para major_version, como o jclasslib faz
+ * ("Major version: 52 [1.8]"). JVMS §4.1, tabela 4.1-A:
+ *   45 -> 1.1 ... 52 -> 1.8 (nomenclatura antiga "1.x"),
+ *   53 -> 9, 54 -> 10, ... (a partir do Java 9: versão = major - 44).
  */
-static const char *java_version_name(u2 major)
+static const char *java_version_name(u2 major, char *buf, size_t buf_len)
 {
-    (void)major;
-    return "?";
+    if (major < 45)
+        snprintf(buf, buf_len, "inválida");
+    else if (major <= 52)
+        snprintf(buf, buf_len, "1.%u", major - 44u);
+    else
+        snprintf(buf, buf_len, "%u", major - 44u);
+    return buf;
 }
 
 static void print_u_line(int depth, const char *label, unsigned value)
@@ -39,11 +43,12 @@ static void print_flags_line(int depth, u2 flags, FlagContext ctx)
 
 void print_general_info(const ClassFile *cf)
 {
+    char version[16];
     print_section("GENERAL INFORMATION");
     printf("%-*s 0x%08X\n", LABEL_WIDTH, "Magic number:", (unsigned)cf->magic);
     print_u_line(0, "Minor version:", cf->minor_version);
     printf("%-*s %u [%s]\n", LABEL_WIDTH, "Major version:", cf->major_version,
-           java_version_name(cf->major_version));
+           java_version_name(cf->major_version, version, sizeof version));
     print_u_line(0, "Constant pool count:", cf->constant_pool_count);
     print_flags_line(0, cf->access_flags, FLAGS_CLASS);
     print_cp_ref(cf, "This class:", cf->this_class, 0);

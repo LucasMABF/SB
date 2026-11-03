@@ -1,5 +1,6 @@
 build/
 out/
 leitor-exibidor
+leitor-exibidor.exe
 *.o
 *.d

@@ -61,56 +61,118 @@ static const char *newarray_type_name(u1 atype)
 /* ---------------------------------------------------------------------- */
 
 /*
- * TODO(Pessoa B): tableswitch (JVMS §6.5 tableswitch). Formato:
- *   opcode
- *   0-3 bytes de padding, de forma que `default` comece num endereço
- *       múltiplo de 4 CONTANDO A PARTIR DO INÍCIO DO CODE (não do arquivo!)
- *   s4 default, s4 low, s4 high
- *   (high - low + 1) x s4 offsets
- * Todos os offsets são relativos ao pc do opcode. Exibir como o jclasslib:
+ * Os switches têm 0-3 bytes de padding logo após o opcode, de forma que o
+ * primeiro operando (default) comece num endereço múltiplo de 4 CONTANDO A
+ * PARTIR DO INÍCIO DO CODE (não do arquivo). Retorna o deslocamento, a partir
+ * do opcode, onde começa o default.
+ */
+static u4 switch_operands_offset(const Insn *in)
+{
+    return 1 + (3 - in->pc % 4);
+}
+
+/* Uma linha "chave: destino (+offset)" de um switch, alinhada abaixo do mnemônico. */
+static void print_switch_case(const Insn *in, const char *key, int32_t off)
+{
+    printf("\n");
+    print_indent(in->depth);
+    printf("%7s    %s: %ld (%+ld)", "", key, (long)in->pc + off, (long)off);
+}
+
+/*
+ * tableswitch (JVMS §6.5): padding, s4 default, s4 low, s4 high e
+ * (high - low + 1) offsets. Os offsets são relativos ao pc do opcode.
  *   tableswitch 1 to 3
  *       1: 28 (+26)
- *       2: 31 (+29)
- *       3: 34 (+32)
+ *       ...
  *       default: 37 (+35)
- * Use at_s4(in, off) e has(in, n) para ler com segurança.
- * Teste com examples/tableswitch.class.
  */
 static u4 op_tableswitch(const Insn *in)
 {
-    (void)in;
-    printf(" <tableswitch não implementado>");
-    return 0;
+    u4 base = switch_operands_offset(in);
+    if (!has(in, base + 11)) return 0;
+
+    int32_t def = at_s4(in, base);
+    int32_t low = at_s4(in, base + 4);
+    int32_t high = at_s4(in, base + 8);
+    if (high < low) {
+        printf(" <faixa inválida: %ld to %ld>", (long)low, (long)high);
+        return 0;
+    }
+
+    /* Confere o tamanho da tabela antes de multiplicar (evita overflow). */
+    int64_t count = (int64_t)high - low + 1;
+    if (count > (int64_t)(in->len / 4)) return 0;
+    u4 table = base + 12;
+    if (!has(in, table + 4 * (u4)count - 1)) return 0;
+
+    printf(" %ld to %ld", (long)low, (long)high);
+    for (u4 i = 0; i < (u4)count; i++) {
+        char key[16];
+        snprintf(key, sizeof key, "%ld", (long)((int64_t)low + i));
+        print_switch_case(in, key, at_s4(in, table + 4 * i));
+    }
+    print_switch_case(in, "default", def);
+    return table + 4 * (u4)count;
 }
 
 /*
- * TODO(Pessoa B): lookupswitch (JVMS §6.5 lookupswitch). Formato:
- *   opcode, 0-3 bytes de padding (mesma regra do tableswitch),
- *   s4 default, s4 npairs, npairs x (s4 match, s4 offset)
- * Exibir:
+ * lookupswitch (JVMS §6.5): padding, s4 default, s4 npairs e
+ * npairs pares (s4 match, s4 offset), ordenados por match.
  *   lookupswitch 3
  *       10: 36 (+35)
- *       20: 39 (+38)
+ *       ...
  *       default: 42 (+41)
- * Teste com examples/lookupswitch.class.
  */
 static u4 op_lookupswitch(const Insn *in)
 {
-    (void)in;
-    printf(" <lookupswitch não implementado>");
-    return 0;
+    u4 base = switch_operands_offset(in);
+    if (!has(in, base + 7)) return 0;
+
+    int32_t def = at_s4(in, base);
+    int32_t npairs = at_s4(in, base + 4);
+    if (npairs < 0 || (u4)npairs > in->len / 8) {
+        printf(" <npairs inválido: %ld>", (long)npairs);
+        return 0;
+    }
+    u4 pairs = base + 8;
+    if (npairs > 0 && !has(in, pairs + 8 * (u4)npairs - 1)) return 0;
+
+    printf(" %ld", (long)npairs);
+    for (u4 i = 0; i < (u4)npairs; i++) {
+        char key[16];
+        snprintf(key, sizeof key, "%ld", (long)at_s4(in, pairs + 8 * i));
+        print_switch_case(in, key, at_s4(in, pairs + 8 * i + 4));
+    }
+    print_switch_case(in, "default", def);
+    return pairs + 8 * (u4)npairs;
 }
 
 /*
- * TODO(Pessoa B): wide (JVMS §6.5 wide). Formato:
- *   wide <opcode> u2 índice                    (4 bytes)  para iload..aload, istore..astore, ret
- *   wide iinc     u2 índice  s2 constante      (6 bytes)
- * Exibir, por exemplo: "wide iload 300"  ou  "wide iinc 300 by 1000".
+ * wide (JVMS §6.5): estende o índice de variável local para u2.
+ *   wide <iload..aload | istore..astore | ret> u2 índice          (4 bytes)
+ *   wide iinc u2 índice s2 constante                              (6 bytes)
+ * Exibe "wide iload 300" ou "wide iinc 300 by 1000".
  */
 static u4 op_wide(const Insn *in)
 {
-    (void)in;
-    printf(" <wide não implementado>");
+    if (!has(in, 3)) return 0;
+    u1 op = at_u1(in, 1);
+
+    if (op == 0x84) { /* iinc */
+        if (!has(in, 5)) return 0;
+        printf(" iinc %u by %d", at_u2(in, 2), (int16_t)at_u2(in, 4));
+        return 6;
+    }
+
+    /* As instruções que aceitam wide são exatamente as de operando OPK_LOCAL. */
+    const OpcodeInfo *info = &OPCODES[op];
+    if (info->mnemonic && info->kind == OPK_LOCAL) {
+        printf(" %s %u", info->mnemonic, at_u2(in, 2));
+        return 4;
+    }
+
+    printf(" <opcode 0x%02X não pode ser modificado por wide>", op);
     return 0;
 }
 
@@ -210,7 +272,8 @@ void print_bytecode(const ClassFile *cf, const u1 *code, u4 code_length, int dep
         printf("%5u  ", (unsigned)in.pc);
 
         if (!info->mnemonic) {
-            printf("<opcode 0x%02X não mapeado> -- listagem interrompida\n", op);
+            /* 0xcb - 0xfd não são definidos pela JVMS. */
+            printf("<opcode 0x%02X inválido> -- listagem interrompida\n", op);
             return;
         }
 
@@ -220,7 +283,7 @@ void print_bytecode(const ClassFile *cf, const u1 *code, u4 code_length, int dep
 
         if (size == 0) {
             print_indent(depth);
-            printf("       <instrução malformada ou não implementada> -- listagem interrompida\n");
+            printf("       <instrução malformada ou truncada> -- listagem interrompida\n");
             return;
         }
         in.pc += size;

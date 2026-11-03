@@ -67,23 +67,141 @@ const OpcodeInfo OPCODES[256] = {
     [0x34] = {"caload",      OPK_NONE},
     [0x35] = {"saload",      OPK_NONE},
 
-    /*
-     * TODO(Pessoa B): completar a tabela. Faltam:
-     *   0x36 - 0x56  Stores     (istore ... sastore)        -> istore..astore são OPK_LOCAL
-     *   0x57 - 0x5f  Stack      (pop, pop2, dup ..., swap)
-     *   0x60 - 0x84  Math       (iadd ... lxor, iinc)       -> iinc (0x84) é OPK_IINC
-     *   0x85 - 0x93  Conversões (i2l ... i2s)
-     *   0x94 - 0xa6  Comparações (lcmp ... if_acmpne)       -> ifeq..if_acmpne são OPK_BRANCH2
-     *   0xa7 - 0xb1  Controle   (goto, jsr, ret, tableswitch, lookupswitch, ireturn ... return)
-     *                           -> goto/jsr OPK_BRANCH2, ret OPK_LOCAL,
-     *                              tableswitch OPK_TABLESWITCH, lookupswitch OPK_LOOKUPSWITCH
-     *   0xc6 - 0xc9  Extended   (ifnull, ifnonnull -> OPK_BRANCH2; goto_w, jsr_w -> OPK_BRANCH4)
-     *   0xca breakpoint, 0xfe impdep1, 0xff impdep2 (reservados, OPK_NONE)
-     *
-     * Fonte: JVMS SE 8, capítulo 7 "Opcode Mnemonics by Opcode"
-     *   https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-7.html
-     * Confira os operandos de cada instrução no capítulo 6.
-     */
+    /* ---------------- Stores (0x36 - 0x56) ---------------- */
+    [0x36] = {"istore",      OPK_LOCAL},
+    [0x37] = {"lstore",      OPK_LOCAL},
+    [0x38] = {"fstore",      OPK_LOCAL},
+    [0x39] = {"dstore",      OPK_LOCAL},
+    [0x3a] = {"astore",      OPK_LOCAL},
+    [0x3b] = {"istore_0",    OPK_NONE},
+    [0x3c] = {"istore_1",    OPK_NONE},
+    [0x3d] = {"istore_2",    OPK_NONE},
+    [0x3e] = {"istore_3",    OPK_NONE},
+    [0x3f] = {"lstore_0",    OPK_NONE},
+    [0x40] = {"lstore_1",    OPK_NONE},
+    [0x41] = {"lstore_2",    OPK_NONE},
+    [0x42] = {"lstore_3",    OPK_NONE},
+    [0x43] = {"fstore_0",    OPK_NONE},
+    [0x44] = {"fstore_1",    OPK_NONE},
+    [0x45] = {"fstore_2",    OPK_NONE},
+    [0x46] = {"fstore_3",    OPK_NONE},
+    [0x47] = {"dstore_0",    OPK_NONE},
+    [0x48] = {"dstore_1",    OPK_NONE},
+    [0x49] = {"dstore_2",    OPK_NONE},
+    [0x4a] = {"dstore_3",    OPK_NONE},
+    [0x4b] = {"astore_0",    OPK_NONE},
+    [0x4c] = {"astore_1",    OPK_NONE},
+    [0x4d] = {"astore_2",    OPK_NONE},
+    [0x4e] = {"astore_3",    OPK_NONE},
+    [0x4f] = {"iastore",     OPK_NONE},
+    [0x50] = {"lastore",     OPK_NONE},
+    [0x51] = {"fastore",     OPK_NONE},
+    [0x52] = {"dastore",     OPK_NONE},
+    [0x53] = {"aastore",     OPK_NONE},
+    [0x54] = {"bastore",     OPK_NONE},
+    [0x55] = {"castore",     OPK_NONE},
+    [0x56] = {"sastore",     OPK_NONE},
+
+    /* ---------------- Stack (0x57 - 0x5f) ---------------- */
+    [0x57] = {"pop",         OPK_NONE},
+    [0x58] = {"pop2",        OPK_NONE},
+    [0x59] = {"dup",         OPK_NONE},
+    [0x5a] = {"dup_x1",      OPK_NONE},
+    [0x5b] = {"dup_x2",      OPK_NONE},
+    [0x5c] = {"dup2",        OPK_NONE},
+    [0x5d] = {"dup2_x1",     OPK_NONE},
+    [0x5e] = {"dup2_x2",     OPK_NONE},
+    [0x5f] = {"swap",        OPK_NONE},
+
+    /* ---------------- Math (0x60 - 0x84) ---------------- */
+    [0x60] = {"iadd",        OPK_NONE},
+    [0x61] = {"ladd",        OPK_NONE},
+    [0x62] = {"fadd",        OPK_NONE},
+    [0x63] = {"dadd",        OPK_NONE},
+    [0x64] = {"isub",        OPK_NONE},
+    [0x65] = {"lsub",        OPK_NONE},
+    [0x66] = {"fsub",        OPK_NONE},
+    [0x67] = {"dsub",        OPK_NONE},
+    [0x68] = {"imul",        OPK_NONE},
+    [0x69] = {"lmul",        OPK_NONE},
+    [0x6a] = {"fmul",        OPK_NONE},
+    [0x6b] = {"dmul",        OPK_NONE},
+    [0x6c] = {"idiv",        OPK_NONE},
+    [0x6d] = {"ldiv",        OPK_NONE},
+    [0x6e] = {"fdiv",        OPK_NONE},
+    [0x6f] = {"ddiv",        OPK_NONE},
+    [0x70] = {"irem",        OPK_NONE},
+    [0x71] = {"lrem",        OPK_NONE},
+    [0x72] = {"frem",        OPK_NONE},
+    [0x73] = {"drem",        OPK_NONE},
+    [0x74] = {"ineg",        OPK_NONE},
+    [0x75] = {"lneg",        OPK_NONE},
+    [0x76] = {"fneg",        OPK_NONE},
+    [0x77] = {"dneg",        OPK_NONE},
+    [0x78] = {"ishl",        OPK_NONE},
+    [0x79] = {"lshl",        OPK_NONE},
+    [0x7a] = {"ishr",        OPK_NONE},
+    [0x7b] = {"lshr",        OPK_NONE},
+    [0x7c] = {"iushr",       OPK_NONE},
+    [0x7d] = {"lushr",       OPK_NONE},
+    [0x7e] = {"iand",        OPK_NONE},
+    [0x7f] = {"land",        OPK_NONE},
+    [0x80] = {"ior",         OPK_NONE},
+    [0x81] = {"lor",         OPK_NONE},
+    [0x82] = {"ixor",        OPK_NONE},
+    [0x83] = {"lxor",        OPK_NONE},
+    [0x84] = {"iinc",        OPK_IINC},
+
+    /* ---------------- Conversões (0x85 - 0x93) ---------------- */
+    [0x85] = {"i2l",         OPK_NONE},
+    [0x86] = {"i2f",         OPK_NONE},
+    [0x87] = {"i2d",         OPK_NONE},
+    [0x88] = {"l2i",         OPK_NONE},
+    [0x89] = {"l2f",         OPK_NONE},
+    [0x8a] = {"l2d",         OPK_NONE},
+    [0x8b] = {"f2i",         OPK_NONE},
+    [0x8c] = {"f2l",         OPK_NONE},
+    [0x8d] = {"f2d",         OPK_NONE},
+    [0x8e] = {"d2i",         OPK_NONE},
+    [0x8f] = {"d2l",         OPK_NONE},
+    [0x90] = {"d2f",         OPK_NONE},
+    [0x91] = {"i2b",         OPK_NONE},
+    [0x92] = {"i2c",         OPK_NONE},
+    [0x93] = {"i2s",         OPK_NONE},
+
+    /* ---------------- Comparações (0x94 - 0xa6) ---------------- */
+    [0x94] = {"lcmp",        OPK_NONE},
+    [0x95] = {"fcmpl",       OPK_NONE},
+    [0x96] = {"fcmpg",       OPK_NONE},
+    [0x97] = {"dcmpl",       OPK_NONE},
+    [0x98] = {"dcmpg",       OPK_NONE},
+    [0x99] = {"ifeq",        OPK_BRANCH2},
+    [0x9a] = {"ifne",        OPK_BRANCH2},
+    [0x9b] = {"iflt",        OPK_BRANCH2},
+    [0x9c] = {"ifge",        OPK_BRANCH2},
+    [0x9d] = {"ifgt",        OPK_BRANCH2},
+    [0x9e] = {"ifle",        OPK_BRANCH2},
+    [0x9f] = {"if_icmpeq",   OPK_BRANCH2},
+    [0xa0] = {"if_icmpne",   OPK_BRANCH2},
+    [0xa1] = {"if_icmplt",   OPK_BRANCH2},
+    [0xa2] = {"if_icmpge",   OPK_BRANCH2},
+    [0xa3] = {"if_icmpgt",   OPK_BRANCH2},
+    [0xa4] = {"if_icmple",   OPK_BRANCH2},
+    [0xa5] = {"if_acmpeq",   OPK_BRANCH2},
+    [0xa6] = {"if_acmpne",   OPK_BRANCH2},
+
+    /* ---------------- Controle (0xa7 - 0xb1) ---------------- */
+    [0xa7] = {"goto",         OPK_BRANCH2},
+    [0xa8] = {"jsr",          OPK_BRANCH2},
+    [0xa9] = {"ret",          OPK_LOCAL},
+    [0xaa] = {"tableswitch",  OPK_TABLESWITCH},
+    [0xab] = {"lookupswitch", OPK_LOOKUPSWITCH},
+    [0xac] = {"ireturn",      OPK_NONE},
+    [0xad] = {"lreturn",      OPK_NONE},
+    [0xae] = {"freturn",      OPK_NONE},
+    [0xaf] = {"dreturn",      OPK_NONE},
+    [0xb0] = {"areturn",      OPK_NONE},
+    [0xb1] = {"return",       OPK_NONE},
 
     /* ---------------- References (0xb2 - 0xc3) ---------------- */
     [0xb2] = {"getstatic",       OPK_CP_U2},
@@ -105,7 +223,16 @@ const OpcodeInfo OPCODES[256] = {
     [0xc2] = {"monitorenter",    OPK_NONE},
     [0xc3] = {"monitorexit",     OPK_NONE},
 
-    /* ---------------- Extended (0xc4 - 0xc5) ---------------- */
+    /* ---------------- Extended (0xc4 - 0xc9) ---------------- */
     [0xc4] = {"wide",            OPK_WIDE},
     [0xc5] = {"multianewarray",  OPK_MULTIANEWARRAY},
+    [0xc6] = {"ifnull",          OPK_BRANCH2},
+    [0xc7] = {"ifnonnull",       OPK_BRANCH2},
+    [0xc8] = {"goto_w",          OPK_BRANCH4},
+    [0xc9] = {"jsr_w",           OPK_BRANCH4},
+
+    /* ---------------- Reservados (JVMS §6.2) ---------------- */
+    [0xca] = {"breakpoint",      OPK_NONE},
+    [0xfe] = {"impdep1",         OPK_NONE},
+    [0xff] = {"impdep2",         OPK_NONE},
 };

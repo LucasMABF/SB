@@ -11,6 +11,9 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Indentação máxima (cada nível de atributo aninhado soma 2). */
+#define MAX_ATTR_DEPTH 40
+
 static const struct {
     const char *name;
     AttrDecoder fn;
@@ -21,7 +24,7 @@ static const struct {
     {"Exceptions",             decode_exceptions},
     {"LineNumberTable",        decode_line_number_table},
     {"LocalVariableTable",     decode_local_variable_table},
-    {"LocalVariableTypeTable", decode_local_variable_table}, /* mesmo formato */
+    {"LocalVariableTypeTable", decode_local_variable_type_table},
     {"InnerClasses",           decode_inner_classes},
     {"Signature",              decode_signature},
     {"Deprecated",             decode_empty},
@@ -29,6 +32,17 @@ static const struct {
     {"StackMapTable",          decode_stack_map_table},
     {"BootstrapMethods",       decode_bootstrap_methods},
     {"EnclosingMethod",        decode_enclosing_method},
+    {"MethodParameters",       decode_method_parameters},
+    {"NestHost",               decode_nest_host},
+    {"NestMembers",            decode_nest_members},
+    {"PermittedSubclasses",    decode_permitted_subclasses},
+    {"RuntimeVisibleAnnotations",            decode_annotations},
+    {"RuntimeInvisibleAnnotations",          decode_annotations},
+    {"RuntimeVisibleParameterAnnotations",   decode_parameter_annotations},
+    {"RuntimeInvisibleParameterAnnotations", decode_parameter_annotations},
+    {"AnnotationDefault",      decode_annotation_default},
+    {"SourceDebugExtension",   decode_source_debug_extension},
+    {"Record",                 decode_record},
     {NULL, NULL}
 };
 
@@ -51,6 +65,14 @@ void print_attribute_raw(const ClassFile *cf, u2 index, u2 name_index,
     print_indent(depth + 2);
     printf("%-*s %u\n", LABEL_WIDTH, "Attribute length:", (unsigned)length);
 
+    /* Atributos podem se aninhar (Code dentro de Code, Record...). Um arquivo
+     * malformado poderia aninhar milhares de níveis e estourar a pilha. */
+    if (depth > MAX_ATTR_DEPTH) {
+        print_indent(depth + 2);
+        printf("<aninhamento excessivo de atributos -- conteúdo omitido>\n");
+        return;
+    }
+
     AttrDecoder fn = find_decoder(name);
     ByteReader r;
     br_init(&r, info, length);
@@ -61,7 +83,7 @@ void print_attribute_raw(const ClassFile *cf, u2 index, u2 name_index,
             printf("<atributo truncado/malformado>\n");
         } else if (br_remaining(&r) > 0) {
             print_indent(depth + 2);
-            printf("<aviso: %zu byte(s) não lidos no fim do atributo>\n", br_remaining(&r));
+            printf("<aviso: %lu byte(s) não lidos no fim do atributo>\n", (unsigned long)br_remaining(&r));
         }
         return;
     }

@@ -242,7 +242,8 @@ ClassFile *classfile_load(const char *path, char *err, size_t err_len)
     }
 
     if (br_remaining(&r) > 0)
-        fprintf(stderr, "Aviso: %zu byte(s) extra(s) no fim do arquivo foram ignorados\n", br_remaining(&r));
+        fprintf(stderr, "Aviso: %lu byte(s) extra(s) no fim do arquivo foram ignorados\n",
+                (unsigned long)br_remaining(&r));
 
     free(data);
     return cf;
