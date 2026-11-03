@@ -1,0 +1,5 @@
+build/
+out/
+leitor-exibidor
+*.o
+*.d
