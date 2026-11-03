@@ -107,8 +107,10 @@ truncados/corrompidos sem travar.
 
 ## Entrega
 
+- `docs/slides.pdf`: slides com exemplos das seções exibidas pelo leitor-exibidor.
 - `docs/ATIVIDADES.md`: resumo das atividades de cada membro.
-- `docs/prints/`: prints da saída do leitor-exibidor (uma seção por imagem) usados nos slides.
+- `docs/ROTEIRO_VIDEO.md`: roteiro do vídeo de 5 minutos.
+- `docs/prints/`: prints da saída do leitor-exibidor (uma seção por imagem).
 
 ## Estrutura
 
