@@ -18,7 +18,6 @@ typedef enum {
     FLAGS_INNER_CLASS   /* JVMS tabela 4.7.6-A (atributo InnerClasses) */
 } FlagContext;
 
-/** Escreve em buf algo como "public static final". */
 void flags_to_string(u2 flags, FlagContext ctx, char *buf, size_t buf_len);
 
 #endif
