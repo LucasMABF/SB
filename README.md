@@ -84,7 +84,7 @@ make clean
 
 ## Entrega
 
-- `docs/slides.pdf`: slides com exemplos das seções exibidas pelo leitor-exibidor.
+- `Leitor-Exibidor_SB_logo.pdf`: slides com exemplos das seções exibidas pelo leitor-exibidor.
 - `docs/ATIVIDADES.md`: resumo das atividades de cada membro.
 - `docs/ROTEIRO_VIDEO.md`: roteiro do vídeo de 5 minutos.
 
