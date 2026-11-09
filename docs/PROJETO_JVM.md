@@ -152,7 +152,9 @@ obj->next_alloc = vm->heap;
 vm->heap = obj;
 ```
 
-- O número de objetos é limitado só pela memória disponível.
+- O número de objetos é limitado só pela memória disponível. Se o `calloc`
+  falhar, a JVM gera `OutOfMemoryError` (como as demais exceções da JVM,
+  imprime o erro e encerra).
 - Não haverá coletor de lixo: a memória é liberada no fim da execução.
 
 ---
@@ -211,7 +213,9 @@ Array *a = calloc(1, sizeof(Array) + length * tamanho_elemento);
 - `data` é declarado como `int64_t` para garantir o alinhamento.
 - Arrays de referências guardam ponteiros. Matriz é array de arrays.
 - **`arraylength`:** desempilha a referência, testa `null`, empilha `a->length`.
-- Todo acesso testa `null` e os limites do índice.
+- Todo acesso testa `null` e os limites do índice; `newarray`, `anewarray` e
+  `multianewarray` testam tamanho negativo (`NegativeArraySizeException`) antes
+  do `calloc`.
 
 ---
 
@@ -241,8 +245,12 @@ class B extends A { long y; }   // x → 0 (herdado), y → 1
 push(f, o->fields[field->offset]);   /* getfield */
 ```
 
-- Cada campo usa um `Slot`, inclusive `long` e `double`.
+- Cada campo usa um `Slot` no objeto, inclusive `long` e `double`. Na pilha de
+  operandos, porém, `long` e `double` ocupam dois slots (slide 3): `getfield` e
+  `putfield` olham o descritor do campo (`J` ou `D`) e empilham ou desempilham
+  dois.
 - `new` zera os campos, e o construtor roda em seguida via `invokespecial`.
+- `getfield` e `putfield` testam `null` antes de acessar o objeto.
 
 ---
 
@@ -325,7 +333,7 @@ Verificações:
 | Responsável | Parte | Inclui |
 |---|---|---|
 | Gabriel Pinto | Laço principal e instruções básicas (a) | Tabela de handlers; constantes, load/store, pilha, aritmética, conversões, comparações, desvios e switches |
-| Antonio Coelho | Heap, arrays e objetos (b, d, e) | Alocação e liberação; `new`, `newarray`, `anewarray`, `multianewarray`, `arraylength`, acesso a arrays, `getfield`, `putfield` |
+| Antonio Coelho | Heap, arrays e objetos (b, d, e) | Alocação e liberação; `new`, `newarray`, `anewarray`, `multianewarray`, `arraylength`, `getfield`, `putfield`, acesso a arrays (`xaload` e `xastore`) |
 | Lucas Mendes | Carga e área de métodos (c), coordenação | Carga sob demanda, decodificação do Code, layout dos campos, estados, `<clinit>`, resolução do pool, `getstatic`, `putstatic` |
 | Leonardo Mileo | Frames e chamadas (f) | Criação de frames, `invoke*`, `return`, seleção de método virtual, `athrow` e tabela de exceções |
 | Daniel Morais | Biblioteca simulada, integração e testes | Modos `run` e `view`, `System.out`, `String`, `StringBuffer`, `instanceof`, `checkcast`, classes de teste e analisadores |
